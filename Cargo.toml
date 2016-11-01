@@ -1,0 +1,24 @@
+[package]
+name = "sda-stress"
+version = "0.1.0"
+authors = ["Morten Dahl"]
+
+[dependencies]
+sodiumoxide = "0.0.12"
+threshold-secret-sharing = "0.1.1"
+paillier = { git="ssh://git@github.com/snipsco/rust-paillier.git" }
+
+[dev-dependencies]
+bencher = "0.1"
+
+[[bench]]
+name = "sharing"
+harness = false
+
+[[bench]]
+name = "sodium"
+harness = false
+
+[[bench]]
+name = "paillier"
+harness = false
