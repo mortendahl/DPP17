@@ -23,8 +23,8 @@ impl TestKeyGeneration for PackedPaillier {
         let ref n = p * q;
         let plainek = <PlainPaillier as PartiallyHomomorphicScheme>::EncryptionKey::from(n);
         let plaindk = <PlainPaillier as PartiallyHomomorphicScheme>::DecryptionKey::from(p, q);
-        let ek = <PackedPaillier as PartiallyHomomorphicScheme>::EncryptionKey::from(plainek, 50, 32);
-        let dk = <PackedPaillier as PartiallyHomomorphicScheme>::DecryptionKey::from(plaindk, 50, 32);
+        let ek = <PackedPaillier as PartiallyHomomorphicScheme>::EncryptionKey::from(plainek, 25, 32+20);
+        let dk = <PackedPaillier as PartiallyHomomorphicScheme>::DecryptionKey::from(plaindk, 25, 32+20);
         (ek, dk)
     }
 }
@@ -35,10 +35,10 @@ where
     PHE : TestKeyGeneration,
     PHE::Plaintext : From<Vec<u64>>
 {
-    let secrets: Vec<u64> = vec![125; 100];
+    let secrets: Vec<u64> = vec![125; 50];
     let (ek, _) = PHE::test_keypair();
     b.iter(|| {
-        let _: Vec<PHE::Ciphertext> = secrets.chunks(50)
+        let _: Vec<PHE::Ciphertext> = secrets.chunks(25)
                 .map(|batch| {
                     let m = PHE::Plaintext::from(batch.to_vec());
                     PHE::encrypt(&ek, &m)
