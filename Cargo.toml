@@ -4,10 +4,10 @@ version = "0.1.0"
 authors = ["Morten Dahl"]
 
 [features]
-default = ["incltss", "inclsodium", "inclpaillier"]
-incltss = ["threshold-secret-sharing"]
-inclsodium = ["sodiumoxide"]
-inclpaillier = ["paillier"]
+default = ["benchtss", "benchsodium", "benchpaillier"]
+benchtss = ["threshold-secret-sharing"]
+benchsodium = ["sodiumoxide"]
+benchpaillier = ["paillier"]
 
 [dependencies]
 sodiumoxide = { version="0.0.12", optional=true }

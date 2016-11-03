@@ -2,10 +2,10 @@
 #[macro_use]
 extern crate bencher;
 
-#[cfg(feature="incltss")]
+#[cfg(feature="benchtss")]
 extern crate threshold_secret_sharing as tss;
 
-#[cfg(feature="incltss")]
+#[cfg(feature="benchtss")]
 mod foo {
 
     use bencher::Bencher;
@@ -35,17 +35,17 @@ mod foo {
 
 }
 
-#[cfg(feature="incltss")]
+#[cfg(feature="benchtss")]
 use self::foo::*;
-#[cfg(feature="incltss")]
+#[cfg(feature="benchtss")]
 benchmark_group!(tss,
     tss_small,
     tss_large
 );
 
-#[cfg(not(feature="incltss"))]
+#[cfg(not(feature="benchtss"))]
 pub fn dummy(_: &mut bencher::Bencher) {}
-#[cfg(not(feature="incltss"))]
+#[cfg(not(feature="benchtss"))]
 benchmark_group!(tss, dummy);
 
 benchmark_main!(tss);

@@ -2,10 +2,10 @@
 #[macro_use]
 extern crate bencher;
 
-#[cfg(feature="inclpaillier")]
+#[cfg(feature="benchpaillier")]
 extern crate paillier;
 
-#[cfg(feature="inclpaillier")]
+#[cfg(feature="benchpaillier")]
 mod foo {
 
     use bencher::Bencher;
@@ -117,18 +117,18 @@ mod foo {
 
 }
 
-#[cfg(feature="inclpaillier")]
+#[cfg(feature="benchpaillier")]
 use self::foo::*;
-#[cfg(feature="inclpaillier")]
+#[cfg(feature="benchpaillier")]
 benchmark_group!(paillier,
     paillier_encryption<paillier::PackedPaillier>,
     paillier_decryption<paillier::PackedPaillier>,
     paillier_addition<paillier::PackedPaillier>
 );
 
-#[cfg(not(feature="inclpaillier"))]
+#[cfg(not(feature="benchpaillier"))]
 pub fn dummy(_: &mut bencher::Bencher) {}
-#[cfg(not(feature="inclpaillier"))]
+#[cfg(not(feature="benchpaillier"))]
 benchmark_group!(paillier, dummy);
 
 benchmark_main!(paillier);

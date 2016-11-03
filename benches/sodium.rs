@@ -2,10 +2,10 @@
 #[macro_use]
 extern crate bencher;
 
-#[cfg(feature="inclsodium")]
+#[cfg(feature="benchsodium")]
 extern crate sodiumoxide;
 
-#[cfg(feature="inclsodium")]
+#[cfg(feature="benchsodium")]
 mod foo {
 
     use bencher::Bencher;
@@ -32,17 +32,17 @@ mod foo {
 
 }
 
-#[cfg(feature="inclsodium")]
+#[cfg(feature="benchsodium")]
 use self::foo::*;
-#[cfg(feature="inclsodium")]
+#[cfg(feature="benchsodium")]
 benchmark_group!(sodium,
     sodium_encryption,
     sodium_decryption
 );
 
-#[cfg(not(feature="inclsodium"))]
+#[cfg(not(feature="benchsodium"))]
 pub fn dummy(_: &mut bencher::Bencher) {}
-#[cfg(not(feature="inclsodium"))]
+#[cfg(not(feature="benchsodium"))]
 benchmark_group!(sodium, dummy);
 
 benchmark_main!(sodium);
