@@ -6,8 +6,8 @@ use bencher::Bencher;
 use tss::packed::*;
 
 pub fn sharing_small(b: &mut Bencher) {
-    let ref pss = PSS_4_26_3;
-    let secrets: Vec<i64> = vec![5 ; 9999];
+    let ref pss = PackedSecretSharing::new(5, 10, 26);
+    let secrets: Vec<i64> = vec![5 ; 3540 * pss.secret_count];
     b.iter(|| {
         let _: Vec<Vec<i64>> = secrets.chunks(pss.secret_count)
                 .map(|batch| pss.share(&batch))
@@ -16,8 +16,8 @@ pub fn sharing_small(b: &mut Bencher) {
 }
 
 pub fn sharing_large(b: &mut Bencher) {
-    let ref pss = PSS_155_728_100;
-    let secrets: Vec<i64> = vec![5 ; 10000];
+    let ref pss = PackedSecretSharing::new(16, 47, 80);
+    let secrets: Vec<i64> = vec![5 ; 754 * pss.secret_count];
     b.iter(|| {
         let _: Vec<Vec<i64>> = secrets.chunks(pss.secret_count)
                 .map(|batch| pss.share(&batch))
