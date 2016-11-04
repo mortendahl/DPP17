@@ -12,7 +12,7 @@ mod foo {
     use sodiumoxide::crypto;
 
     pub fn sodium_encryption(b: &mut Bencher) {
-        let secrets: Vec<u8> = vec![125; 8*10000];
+        let secrets: Vec<u8> = vec![125; 4*26*10];
         let (ek, _) = crypto::box_::gen_keypair();
         b.iter(|| {
             let _ = crypto::sealedbox::seal(&secrets, &ek);
@@ -20,7 +20,7 @@ mod foo {
     }
 
     pub fn sodium_decryption(b: &mut Bencher) {
-        let secrets: Vec<u8> = vec![125; 8*10000];
+        let secrets: Vec<u8> = vec![125; 4*26*10];
         let (ek, dk) = crypto::box_::gen_keypair();
         let enc = crypto::sealedbox::seal(&secrets, &ek);
         b.iter(|| {
