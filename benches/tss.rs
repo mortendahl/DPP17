@@ -33,7 +33,7 @@ mod foo {
         // let secrets: Vec<i64> = vec![5 ; 754 * pss.secret_count];
 
         // let ref pss = PackedSecretSharing::new_with_min_size(155, 100, 728, 500_000_000);
-        let ref pss = PackedSecretSharing { threshold: 155, share_count: 728, secret_count: 100, prime: 501458689, omega_secrets: 270973392, omega_shares: 273582721 }
+        let ref pss = PackedSecretSharing { threshold: 155, share_count: 728, secret_count: 100, prime: 501458689, omega_secrets: 270973392, omega_shares: 273582721 };
         let secrets: Vec<i64> = vec![5 ; 100];
 
         b.iter(|| {
