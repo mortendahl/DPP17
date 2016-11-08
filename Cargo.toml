@@ -13,18 +13,15 @@ benchpaillier = ["paillier"]
 sodiumoxide = { version="0.0.12", optional=true }
 threshold-secret-sharing = { version="0.1.1", optional=true }
 paillier = { git="ssh://git@github.com/snipsco/rust-paillier.git", optional=true }
+byteorder = "0.5.3"
 
 [dev-dependencies]
 bencher = "0.1"
 
 [[bench]]
-name = "tss"
+name = "analytics"
 harness = false
 
 [[bench]]
-name = "sodium"
-harness = false
-
-[[bench]]
-name = "paillier"
+name = "ratings"
 harness = false
