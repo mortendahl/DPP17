@@ -10,13 +10,14 @@ use tss::packed::{PackedSecretSharing};
 use paillier::{PartiallyHomomorphicScheme as PHE, PlainPaillier, PackedPaillier};
 
 
+
 static INPUT: [i64; 35_400] = [42; 35_400];
 
 // generated via PackedSecretSharing::new_with_min_size(5, 10, 26, 500_000_000)
 static PSS_SMALL: PackedSecretSharing = PackedSecretSharing { threshold: 5, share_count: 26, secret_count: 10, prime: 500001553, omega_secrets: 459204753, omega_shares: 405355582 };
 
-// generated via PackedSecretSharing::new_with_min_size(155, 100, 728, 500_000_000)
-static PSS_LARGE: PackedSecretSharing = PackedSecretSharing { threshold: 155, share_count: 728, secret_count: 100, prime: 501458689, omega_secrets: 270973392, omega_shares: 273582721 };
+// generated via PackedSecretSharing::new_with_min_size(16, 47, 80, 500_000_000)
+static PSS_MEDIUM: PackedSecretSharing = PackedSecretSharing { threshold: 16, share_count: 80, secret_count: 47, prime: 500007169, omega_secrets: 31452382, omega_shares: 369291191 };
 
 // 1024 bit primes
 static P: &'static str = "148677972634832330983979593310074301486537017973460461278300587514468301043894574906886127642530475786889672304776052879927627556769456140664043088700743909632312483413393134504352834240399191134336344285483935856491230340093391784574980688823380828143810804684752914935441384845195613674104960646037368551517";
@@ -34,6 +35,11 @@ static CIPHERTEXT_COMPONENT_COUNT: usize = 33;
 fn share(pss: &PackedSecretSharing, secrets: &Vec<i64>) -> Vec<Vec<i64>> {
     secrets
         .chunks(pss.secret_count)
+        .map(|batch| {
+            let mut padded_batch = batch.to_vec();
+            while padded_batch.len() < pss.secret_count { padded_batch.push(0); }
+            padded_batch
+        })
         .map(|batch| pss.share(&batch))
         .collect()
 }
@@ -65,37 +71,6 @@ fn decrypt(dk: &<PackedPaillier as PHE>::DecryptionKey, ciphertexts: &Vec<<Packe
         .collect()
 }
 
-
-// pub fn paillier_addition<PHE>(b: &mut Bencher)
-// where
-//     PHE : PartiallyHomomorphicScheme,
-//     PHE : TestKeyGeneration,
-//     PHE::Plaintext : From<Vec<u64>>
-// {
-//     let (ek, _) = PHE::test_keypair();
-//     let ref ciphertexts1: Vec<PHE::Ciphertext> = vec![125; 67].chunks(67)
-//             .map(|batch| {
-//                 let m = PHE::Plaintext::from(batch.to_vec());
-//                 PHE::encrypt(&ek, &m)
-//             })
-//             .collect();
-//
-//     let ref ciphertexts2: Vec<PHE::Ciphertext> = vec![125; 67].chunks(67)
-//             .map(|batch| {
-//                 let m = PHE::Plaintext::from(batch.to_vec());
-//                 PHE::encrypt(&ek, &m)
-//             })
-//             .collect();
-//
-//     b.iter(|| {
-//         let _: Vec<PHE::Ciphertext> = ciphertexts1.iter().zip(ciphertexts2)
-//                 .map(|(c1, c2)| {
-//                     PHE::add(&ek, &c1, &c2)
-//                 })
-//                 .collect();
-//     });
-// }
-
 fn test_keypair() -> (<PackedPaillier as PHE>::EncryptionKey, <PackedPaillier as PHE>::DecryptionKey) {
     let ref p = str::parse(P).unwrap();
     let ref q = str::parse(Q).unwrap();
@@ -109,7 +84,6 @@ fn test_keypair() -> (<PackedPaillier as PHE>::EncryptionKey, <PackedPaillier as
 
 
 
-
 fn bench_share(b: &mut Bencher, pss: &PackedSecretSharing) {
     let ref secrets = INPUT.to_vec();
     b.iter(|| {
@@ -118,8 +92,8 @@ fn bench_share(b: &mut Bencher, pss: &PackedSecretSharing) {
 }
 
 pub fn bench_share_small(b: &mut Bencher) { bench_share(b, &PSS_SMALL); }
-pub fn bench_share_large(b: &mut Bencher) { bench_share(b, &PSS_LARGE); }
-benchmark_group!(group_share, bench_share_small, bench_share_large );
+pub fn bench_share_medium(b: &mut Bencher) { bench_share(b, &PSS_MEDIUM); }
+benchmark_group!(group_share, bench_share_small, bench_share_medium );
 
 
 
@@ -130,17 +104,14 @@ fn bench_encrypt(b: &mut Bencher, pss: &PackedSecretSharing) {
         .map(|shares| shares[0] as u64)
         .collect();
     let (ref ek, _) = test_keypair();
-    let ref shares_for_one_for_single_ciphertext: Vec<u64> = shares_for_one.iter().cloned()
-        // .take(CIPHERTEXT_COMPONENT_COUNT)
-        .collect();
     b.iter(|| {
-        let _ciphertexts = encrypt(ek, shares_for_one_for_single_ciphertext);
+        let _ciphertexts = encrypt(ek, shares_for_one);
     });
 }
 
 fn bench_encrypt_small(b: &mut Bencher) { bench_encrypt(b, &PSS_SMALL); }
-fn bench_encrypt_large(b: &mut Bencher) { bench_encrypt(b, &PSS_LARGE); }
-benchmark_group!(group_encrypt, bench_encrypt_small, bench_encrypt_large );
+fn bench_encrypt_medium(b: &mut Bencher) { bench_encrypt(b, &PSS_MEDIUM); }
+benchmark_group!(group_encrypt, bench_encrypt_small, bench_encrypt_medium );
 
 
 
@@ -151,24 +122,16 @@ fn bench_decrypt(b: &mut Bencher, pss: &PackedSecretSharing) {
         .map(|shares| shares[0] as u64)
         .collect();
     let (ref ek, ref dk) = test_keypair();
-    let ref shares_for_one_for_single_ciphertext: Vec<u64> = shares_for_one.iter().cloned()
-        // .take(CIPHERTEXT_COMPONENT_COUNT)
-        .collect();
-    let ref ciphertexts = encrypt(ek, shares_for_one_for_single_ciphertext);
+    let ref ciphertexts = encrypt(ek, shares_for_one);
     b.iter(|| {
         let _plaintexts = decrypt(dk, ciphertexts);
     });
 }
 
 fn bench_decrypt_small(b: &mut Bencher) { bench_decrypt(b, &PSS_SMALL); }
-fn bench_decrypt_large(b: &mut Bencher) { bench_decrypt(b, &PSS_LARGE); }
-benchmark_group!(group_decrypt, bench_decrypt_small, bench_decrypt_large );
+fn bench_decrypt_medium(b: &mut Bencher) { bench_decrypt(b, &PSS_MEDIUM); }
+benchmark_group!(group_decrypt, bench_decrypt_small, bench_decrypt_medium );
 
-
-
-fn bench_add(b: &mut Bencher) {
-
-}
 
 
 benchmark_main!(group_share, group_encrypt, group_decrypt);
