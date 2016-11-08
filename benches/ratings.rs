@@ -13,11 +13,10 @@ use paillier::{PartiallyHomomorphicScheme as PHE, PlainPaillier, PackedPaillier}
 
 static INPUT: [i64; 35_400] = [42; 35_400];
 
-// generated via PackedSecretSharing::new_with_min_size(5, 10, 26, 500_000_000)
+// generated via PackedSecretSharing::new_with_min_size(t, k, n, 500_000_000)
 static PSS_SMALL: PackedSecretSharing = PackedSecretSharing { threshold: 5, share_count: 26, secret_count: 10, prime: 500001553, omega_secrets: 459204753, omega_shares: 405355582 };
-
-// generated via PackedSecretSharing::new_with_min_size(16, 47, 80, 500_000_000)
 static PSS_MEDIUM: PackedSecretSharing = PackedSecretSharing { threshold: 16, share_count: 80, secret_count: 47, prime: 500007169, omega_secrets: 31452382, omega_shares: 369291191 };
+static PSS_LARGE: PackedSecretSharing = PackedSecretSharing { threshold: 145, share_count: 728, secret_count: 366, prime: 502765057, omega_secrets: 401243248, omega_shares: 457252994 };
 
 // 1024 bit primes
 static P: &'static str = "148677972634832330983979593310074301486537017973460461278300587514468301043894574906886127642530475786889672304776052879927627556769456140664043088700743909632312483413393134504352834240399191134336344285483935856491230340093391784574980688823380828143810804684752914935441384845195613674104960646037368551517";
@@ -93,7 +92,8 @@ fn bench_share(b: &mut Bencher, pss: &PackedSecretSharing) {
 
 pub fn bench_share_small(b: &mut Bencher) { bench_share(b, &PSS_SMALL); }
 pub fn bench_share_medium(b: &mut Bencher) { bench_share(b, &PSS_MEDIUM); }
-benchmark_group!(group_share, bench_share_small, bench_share_medium );
+pub fn bench_share_large(b: &mut Bencher) { bench_share(b, &PSS_LARGE); }
+benchmark_group!(group_share, bench_share_small, bench_share_medium, bench_share_large );
 
 
 
@@ -111,7 +111,8 @@ fn bench_encrypt(b: &mut Bencher, pss: &PackedSecretSharing) {
 
 fn bench_encrypt_small(b: &mut Bencher) { bench_encrypt(b, &PSS_SMALL); }
 fn bench_encrypt_medium(b: &mut Bencher) { bench_encrypt(b, &PSS_MEDIUM); }
-benchmark_group!(group_encrypt, bench_encrypt_small, bench_encrypt_medium );
+fn bench_encrypt_large(b: &mut Bencher) { bench_encrypt(b, &PSS_LARGE); }
+benchmark_group!(group_encrypt, bench_encrypt_small, bench_encrypt_medium, bench_encrypt_large );
 
 
 
@@ -130,7 +131,8 @@ fn bench_decrypt(b: &mut Bencher, pss: &PackedSecretSharing) {
 
 fn bench_decrypt_small(b: &mut Bencher) { bench_decrypt(b, &PSS_SMALL); }
 fn bench_decrypt_medium(b: &mut Bencher) { bench_decrypt(b, &PSS_MEDIUM); }
-benchmark_group!(group_decrypt, bench_decrypt_small, bench_decrypt_medium );
+fn bench_decrypt_large(b: &mut Bencher) { bench_decrypt(b, &PSS_LARGE); }
+benchmark_group!(group_decrypt, bench_decrypt_small, bench_decrypt_medium, bench_decrypt_large );
 
 
 
