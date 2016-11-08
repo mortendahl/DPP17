@@ -6,7 +6,6 @@ extern crate threshold_secret_sharing as tss;
 extern crate paillier;
 
 use bencher::Bencher;
-use byteorder::{ByteOrder, LittleEndian};
 use tss::packed::{PackedSecretSharing};
 use paillier::{PartiallyHomomorphicScheme as PHE, PlainPaillier, PackedPaillier};
 

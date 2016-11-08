@@ -3,16 +3,10 @@ name = "sda-stresstest"
 version = "0.1.0"
 authors = ["Morten Dahl"]
 
-[features]
-default = ["benchtss", "benchsodium", "benchpaillier"]
-benchtss = ["threshold-secret-sharing"]
-benchsodium = ["sodiumoxide"]
-benchpaillier = ["paillier"]
-
 [dependencies]
-sodiumoxide = { version="0.0.12", optional=true }
-threshold-secret-sharing = { version="0.1.1", optional=true }
-paillier = { git="ssh://git@github.com/snipsco/rust-paillier.git", optional=true }
+sodiumoxide = "0.0.12"
+threshold-secret-sharing = "0.1.1"
+paillier = { git="ssh://git@github.com/snipsco/rust-paillier.git", branch="gmp" }
 byteorder = "0.5.3"
 
 [dev-dependencies]
