@@ -6,7 +6,7 @@ authors = ["Morten Dahl"]
 [dependencies]
 sodiumoxide = "0.0.12"
 threshold-secret-sharing = "0.1.1"
-paillier = { git="ssh://git@github.com/snipsco/rust-paillier.git", branch="gmp" }
+paillier = { git="ssh://git@github.com/snipsco/rust-paillier.git" }
 byteorder = "0.5.3"
 
 [dev-dependencies]
