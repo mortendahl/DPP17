@@ -13,15 +13,6 @@ use sodiumoxide::crypto::box_::curve25519xsalsa20poly1305::{PublicKey, SecretKey
 
 
 
-static INPUT: [i64; 100] = [42; 100];
-
-// generated via PackedSecretSharing::new_with_min_size(t, k, n, 500_000_000)
-static PSS_SMALL: PackedSecretSharing = PackedSecretSharing { threshold: 5, share_count: 26, secret_count: 10, prime: 500001553, omega_secrets: 459204753, omega_shares: 405355582 };
-static PSS_MEDIUM: PackedSecretSharing = PackedSecretSharing { threshold: 16, share_count: 80, secret_count: 47, prime: 500007169, omega_secrets: 31452382, omega_shares: 369291191 };
-static PSS_LARGE: PackedSecretSharing = PackedSecretSharing { threshold: 145, share_count: 728, secret_count: 366, prime: 502765057, omega_secrets: 401243248, omega_shares: 457252994 };
-
-
-
 fn share(pss: &PackedSecretSharing, secrets: &Vec<i64>) -> Vec<Vec<i64>> {
     secrets
         .chunks(pss.secret_count)
@@ -51,6 +42,15 @@ fn decrypt(ek: &PublicKey, dk:&SecretKey, ciphertext: &[u8]) -> Vec<u8> {
 
 
 
+// generated via PackedSecretSharing::new_with_min_size(t, k, n, 500_000_000)
+static PSS_SMALL: PackedSecretSharing = PackedSecretSharing { threshold: 5, share_count: 26, secret_count: 10, prime: 500001553, omega_secrets: 459204753, omega_shares: 405355582 };
+static PSS_MEDIUM: PackedSecretSharing = PackedSecretSharing { threshold: 16, share_count: 80, secret_count: 47, prime: 500007169, omega_secrets: 31452382, omega_shares: 369291191 };
+static PSS_LARGE: PackedSecretSharing = PackedSecretSharing { threshold: 145, share_count: 728, secret_count: 366, prime: 502765057, omega_secrets: 401243248, omega_shares: 457252994 };
+
+static INPUT: [i64; 100] = [42; 100];
+
+
+
 fn bench_share(b: &mut Bencher, pss: &PackedSecretSharing) {
     let ref secrets: Vec<i64> = INPUT.to_vec();
     b.iter(|| {
@@ -61,7 +61,11 @@ fn bench_share(b: &mut Bencher, pss: &PackedSecretSharing) {
 pub fn bench_share_small(b: &mut Bencher) { bench_share(b, &PSS_SMALL); }
 pub fn bench_share_medium(b: &mut Bencher) { bench_share(b, &PSS_MEDIUM); }
 pub fn bench_share_large(b: &mut Bencher) { bench_share(b, &PSS_LARGE); }
-benchmark_group!(group_share, bench_share_small, bench_share_medium, bench_share_large );
+benchmark_group!(group_share,
+    bench_share_small,
+    bench_share_medium,
+    bench_share_large
+);
 
 
 
@@ -80,7 +84,11 @@ fn bench_encrypt(b: &mut Bencher, pss: &PackedSecretSharing) {
 fn bench_encrypt_small(b: &mut Bencher) { bench_encrypt(b, &PSS_SMALL); }
 fn bench_encrypt_medium(b: &mut Bencher) { bench_encrypt(b, &PSS_MEDIUM); }
 fn bench_encrypt_large(b: &mut Bencher) { bench_encrypt(b, &PSS_LARGE); }
-benchmark_group!(group_encrypt, bench_encrypt_small, bench_encrypt_medium, bench_encrypt_large );
+benchmark_group!(group_encrypt,
+    bench_encrypt_small,
+    bench_encrypt_medium,
+    bench_encrypt_large
+);
 
 
 
@@ -100,7 +108,11 @@ fn bench_decrypt(b: &mut Bencher, pss: &PackedSecretSharing) {
 fn bench_decrypt_small(b: &mut Bencher) { bench_decrypt(b, &PSS_SMALL); }
 fn bench_decrypt_medium(b: &mut Bencher) { bench_decrypt(b, &PSS_MEDIUM); }
 fn bench_decrypt_large(b: &mut Bencher) { bench_decrypt(b, &PSS_LARGE); }
-benchmark_group!(group_decrypt, bench_decrypt_small, bench_decrypt_medium, bench_decrypt_large );
+benchmark_group!(group_decrypt,
+    bench_decrypt_small,
+    bench_decrypt_medium,
+    bench_decrypt_large
+);
 
 
 

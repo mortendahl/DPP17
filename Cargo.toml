@@ -1,16 +1,17 @@
 [package]
-name = "sda-stresstest"
+name = "benchmarks"
 version = "0.1.0"
-authors = ["Morten Dahl"]
+authors = ["Morten Dahl <mortendahlcs@gmail.com>"]
 
 [dependencies]
 sodiumoxide = "0.0.12"
-threshold-secret-sharing = "0.1.1"
-paillier = { git="ssh://git@github.com/snipsco/rust-paillier.git" }
+threshold-secret-sharing = "0.1"
+paillier = "0.1"
 byteorder = "0.5.3"
 
 [dev-dependencies]
-bencher = { git="https://github.com/snipsco/bencher.git" }
+bencher = "0.1"
+# bencher = { git="https://github.com/snipsco/bencher.git" }
 
 [[bench]]
 name = "analytics"

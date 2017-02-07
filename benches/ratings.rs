@@ -7,11 +7,10 @@ extern crate paillier;
 
 use bencher::Bencher;
 use tss::packed::{PackedSecretSharing};
-use paillier::{PartiallyHomomorphicScheme as PHE, PlainPaillier, PackedPaillier};
+use paillier::*;
+use paillier::coding::integral::vector;
 
 
-
-static INPUT: [i64; 35_400] = [42; 35_400];
 
 // generated via PackedSecretSharing::new_with_min_size(t, k, n, 500_000_000)
 static PSS_SMALL: PackedSecretSharing = PackedSecretSharing { threshold: 5, share_count: 26, secret_count: 10, prime: 500001553, omega_secrets: 459204753, omega_shares: 405355582 };
@@ -23,11 +22,8 @@ static P: &'static str = "148677972634832330983979593310074301486537017973460461
 static Q: &'static str = "158741574437007245654463598139927898730476924736461654463975966787719309357536545869203069369466212089132653564188443272208127277664424448947476335413293018778018615899291704693105620242763173357203898195318179150836424196645745308205164116144020613415407736216097185962171301808761138424668335445923774195463";
 static CIPHERTEXT_COMPONENT_SIZE: usize = 29+32;
 static CIPHERTEXT_COMPONENT_COUNT: usize = 33;
-// 2048 bit primes
-// static P: &'static str = "54012895487015803837782421918841304863093162502146915827099238255626761389465957752056702693431430972436786355954646022466841435632094385265559627938436498972714352765471698566168945062965812056432412175521672036039582393637684261505269548649599691053041645072024278713283987472744964393377089048380212183701013564638897218456903964669359622810875460724326972855594957135344351009076932272355015777958742805494234839710255927334289902051693131165245513596331706022111667560809760947628509288759753593140967096047486612859680010875340619186313770693509235798857494768621913543203586903819461926872265770592622637080247";
-// static Q: &'static str = "60110804761482905184172241999095064083721568391310132372880785562823040626081548259976195239057024762128798436684644401019565227508680839629752481384744855648596664223620474562582585419094571730852126918991494749938349375651158144545334949768160783962056913632707282062013023732986998195594940491859337992015569093391582644730733764652146222141495874869085082992832080902317418308778550853362446428222413647016439326663338175383509775221151568910938769471308411320393345489705012051577672571014388700476797545130036524629098427518061068575727892423981365405385986469525296662636940291427883820330312960173766723887143";
-// static CIPHERTEXT_COMPONENT_SIZE: usize = 29+32;
-// static CIPHERTEXT_PACKING: usize = 67;
+
+static INPUT: [i64; 35_400] = [42; 35_400];
 
 
 
@@ -43,11 +39,10 @@ fn share(pss: &PackedSecretSharing, secrets: &Vec<i64>) -> Vec<Vec<i64>> {
         .collect()
 }
 
-fn encrypt(ek: &<PackedPaillier as PHE>::EncryptionKey, plaintexts: &Vec<u64>) -> Vec<<PackedPaillier as PHE>::Ciphertext>
-where
-    <PackedPaillier as PHE>::Plaintext : From<Vec<u64>>
+fn encrypt<EK>(ek: &EK, plaintexts: &Vec<u64>) -> Vec<vector::Ciphertext<BigInteger, u64>>
+where Paillier : Encryption<EK, Vec<u64>, vector::Ciphertext<BigInteger, u64>>
 {
-    let ciphertexts: Vec<<PackedPaillier as PHE>::Ciphertext> = plaintexts
+    let ciphertexts: Vec<vector::Ciphertext<BigInteger, u64>> = plaintexts
         .chunks(CIPHERTEXT_COMPONENT_COUNT)
         .map(|batch| {
             let mut padded_batch = batch.to_vec();
@@ -55,30 +50,26 @@ where
             padded_batch
         })
         .map(|batch| {
-            let ref m = <PackedPaillier as PHE>::Plaintext::from(batch);
-            PackedPaillier::encrypt(ek, m)
+            Paillier::encrypt(ek, &batch)
         })
         .collect();
     ciphertexts
 }
 
-fn decrypt(dk: &<PackedPaillier as PHE>::DecryptionKey, ciphertexts: &Vec<<PackedPaillier as PHE>::Ciphertext>) -> Vec<<PackedPaillier as PHE>::Plaintext> {
+fn decrypt<DK>(dk: &DK, ciphertexts: &Vec<vector::Ciphertext<BigInteger, u64>>) -> Vec<Vec<u64>>
+where Paillier : Decryption<DK, vector::Ciphertext<BigInteger, u64>, Vec<u64>>
+{
     ciphertexts.iter()
         .map(|ciphertext| {
-            PackedPaillier::decrypt(dk, ciphertext)
+            Paillier::decrypt(dk, ciphertext)
         })
         .collect()
 }
 
-fn test_keypair() -> (<PackedPaillier as PHE>::EncryptionKey, <PackedPaillier as PHE>::DecryptionKey) {
+fn test_keypair() -> Keypair<BigInteger> {
     let ref p = str::parse(P).unwrap();
     let ref q = str::parse(Q).unwrap();
-    let ref n = p * q;
-    let plainek = <PlainPaillier as PHE>::EncryptionKey::from(n);
-    let plaindk = <PlainPaillier as PHE>::DecryptionKey::from(p, q);
-    let ek = <PackedPaillier as PHE>::EncryptionKey::from(plainek, CIPHERTEXT_COMPONENT_COUNT, CIPHERTEXT_COMPONENT_SIZE);
-    let dk = <PackedPaillier as PHE>::DecryptionKey::from(plaindk, CIPHERTEXT_COMPONENT_COUNT, CIPHERTEXT_COMPONENT_SIZE);
-    (ek, dk)
+    Keypair::from((p, q))
 }
 
 
@@ -103,9 +94,13 @@ fn bench_encrypt(b: &mut Bencher, pss: &PackedSecretSharing) {
     let ref shares_for_one: Vec<u64> = shares_for_all.iter()
         .map(|shares| shares[0] as u64)
         .collect();
-    let (ref ek, _) = test_keypair();
+
+    let (ek, _) = test_keypair().keys();
+    let ref code = integral::Code::new(CIPHERTEXT_COMPONENT_COUNT, CIPHERTEXT_COMPONENT_SIZE);
+    let ref eek = ek.with_code(code);
+
     b.iter(|| {
-        let _ciphertexts = encrypt(ek, shares_for_one);
+        let _ciphertexts = encrypt(eek, shares_for_one);
     });
 }
 
@@ -122,10 +117,15 @@ fn bench_decrypt(b: &mut Bencher, pss: &PackedSecretSharing) {
     let ref shares_for_one: Vec<u64> = shares_for_all.iter()
         .map(|shares| shares[0] as u64)
         .collect();
-    let (ref ek, ref dk) = test_keypair();
-    let ref ciphertexts = encrypt(ek, shares_for_one);
+
+    let (ek, dk) = test_keypair().keys();
+    let ref code = integral::Code::new(CIPHERTEXT_COMPONENT_COUNT, CIPHERTEXT_COMPONENT_SIZE);
+    let ref eek = ek.with_code(code);
+    let ref ddk = dk.with_code(code);
+
+    let ref ciphertexts = encrypt(eek, shares_for_one);
     b.iter(|| {
-        let _plaintexts = decrypt(dk, ciphertexts);
+        let _plaintexts = decrypt(ddk, ciphertexts);
     });
 }
 
